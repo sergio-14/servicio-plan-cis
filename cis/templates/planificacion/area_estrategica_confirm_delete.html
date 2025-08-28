@@ -1,0 +1,15 @@
+{# planificacion/templates/planificacion/area_estrategica_confirm_delete.html #} {% extends "base.html" %} {% block content %}
+<div class="container py-4" style="max-width: 600px">
+  <h1 class="h5 mb-3">Eliminar área estratégica</h1>
+  <div class="alert alert-warning">
+    ¿Seguro que deseas eliminar
+    <strong>{{ object.nombre }}</strong>
+    ?
+  </div>
+  <form method="post">
+    {% csrf_token %}
+    <button class="btn btn-danger" type="submit">Sí, eliminar</button>
+    <a class="btn btn-outline-secondary" href="{% url 'area_estrategica_list' %}">Cancelar</a>
+  </form>
+</div>
+{% endblock %}

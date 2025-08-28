@@ -1,0 +1,14 @@
+{# planificacion/templates/planificacion/operacion_form.html #} {% extends "base.html" %} {% load bootstrap_extras %} {% block content %}
+<div class="container py-4" style="max-width: 800px">
+  <h1 class="h4 mb-3">{% if object %}Editar{% else %}Nueva{% endif %} Operación</h1>
+  <form method="post">
+    {% csrf_token %} {% render_bs_field form.accion %}
+    <div class="row">
+      <div class="col-md-3">{% render_bs_field form.codigo %}</div>
+      <div class="col-md-9">{% render_bs_field form.descripcion %}</div>
+    </div>
+    <button type="submit" class="btn btn-primary">Guardar</button>
+    <a href="{% url 'operacion_list' %}" class="btn btn-outline-secondary">Cancelar</a>
+  </form>
+</div>
+{% endblock %}

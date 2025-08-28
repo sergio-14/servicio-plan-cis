@@ -1,0 +1,119 @@
+{# planificacion/templates/planificacion/indicador_list.html #}
+{% extends "base.html" %}
+{% load bootstrap_extras %}
+
+{% block content %}
+<div class="container-fluid py-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">Indicadores</h1>
+    <a href="{% url 'indicador_create' %}" class="btn btn-primary">
+      <i class="bi bi-plus-circle"></i> Nuevo indicador
+    </a>
+  </div>
+
+  {% if messages %}
+    <div class="mb-3">
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags|default:'info' }} mb-2" role="alert">{{ message }}</div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <form method="get" class="row g-2 mb-3">
+    <div class="col-lg-4">
+      <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Buscar (nombre, código, operación)">
+    </div>
+    <div class="col-lg-3">
+      <select name="op" class="form-select">
+        <option value="">— Operación —</option>
+        {% for o in operaciones %}
+          <option value="{{ o.id }}" {% if op_selected|default:'' == o.id|stringformat:'s' %}selected{% endif %}>
+            {{ o.codigo|default:'-' }} — {{ o.descripcion|truncatechars:60 }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-lg-2">
+      <select name="tipo" class="form-select">
+        <option value="">— Tipo —</option>
+        {% for val,label in tipos %}
+          <option value="{{ val }}" {% if tipo_selected == val %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-lg-2">
+      <select name="unidad" class="form-select">
+        <option value="">— Unidad —</option>
+        {% for val,label in unidades %}
+          <option value="{{ val }}" {% if unidad_selected == val %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-lg-1 d-grid">
+      <button class="btn btn-outline-secondary">Filtrar</button>
+    </div>
+  </form>
+
+  <div class="table-responsive">
+    <table class="table table-hover align-middle">
+      <thead class="table-light">
+        <tr>
+          <th>Operación</th>
+          <th>Nombre</th>
+          <th>Tipo</th>
+          <th>Unidad</th>
+          <th>LB ({{ indicadores.0.anio_linea_base|default:'—' }})</th>
+          <th>Meta ({{ indicadores.0.anio_meta|default:'—' }})</th>
+          <th style="width: 140px;"></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for ind in indicadores %}
+          <tr>
+            <td><span class="text-muted">Op. {{ ind.operacion.codigo|default:'-' }}</span></td>
+            <td>{{ ind.nombre }}</td>
+            <td>
+              <span class="badge bg-secondary">{{ ind.get_tipo_display }}</span>
+            </td>
+            <td>
+              <span class="badge bg-info text-dark">{{ ind.get_unidad_display }}</span>
+            </td>
+            <td>{{ ind.linea_base|default:"—" }}</td>
+            <td>{{ ind.meta_valor|default:"—" }}</td>
+            <td class="text-end">
+              <a href="{% url 'indicador_update' ind.pk %}" class="btn btn-sm btn-outline-primary">Editar</a>
+              <a href="{% url 'indicador_delete' ind.pk %}" class="btn btn-sm btn-outline-danger">Borrar</a>
+            </td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="7" class="text-center text-muted">Sin resultados</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if is_paginated %}
+    <nav>
+      <ul class="pagination">
+        {% if page_obj.has_previous %}
+          <li class="page-item"><a class="page-link" href="?q={{ q }}&op={{ op_selected }}&tipo={{ tipo_selected }}&unidad={{ unidad_selected }}&page={{ page_obj.previous_page_number }}">Anterior</a></li>
+        {% else %}
+          <li class="page-item disabled"><span class="page-link">Anterior</span></li>
+        {% endif %}
+        {% for i in paginator.page_range %}
+          {% if page_obj.number == i %}
+            <li class="page-item active"><span class="page-link">{{ i }}</span></li>
+          {% else %}
+            <li class="page-item"><a class="page-link" href="?q={{ q }}&op={{ op_selected }}&tipo={{ tipo_selected }}&unidad={{ unidad_selected }}&page={{ i }}">{{ i }}</a></li>
+          {% endif %}
+        {% endfor %}
+        {% if page_obj.has_next %}
+          <li class="page-item"><a class="page-link" href="?q={{ q }}&op={{ op_selected }}&tipo={{ tipo_selected }}&unidad={{ unidad_selected }}&page={{ page_obj.next_page_number }}">Siguiente</a></li>
+        {% else %}
+          <li class="page-item disabled"><span class="page-link">Siguiente</span></li>
+        {% endif %}
+      </ul>
+    </nav>
+  {% endif %}
+</div>
+{% endblock %}

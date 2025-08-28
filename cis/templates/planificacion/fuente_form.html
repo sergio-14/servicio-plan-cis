@@ -1,0 +1,10 @@
+{# planificacion/templates/planificacion/fuente_form.html #} {% extends "base.html" %} {% load bootstrap_extras %} {% block content %}
+<div class="container py-4" style="max-width: 650px">
+  <h1 class="h4 mb-3">{% if object %}Editar{% else %}Nueva{% endif %} Fuente</h1>
+  <form method="post">
+    {% csrf_token %} {% render_bs_field form.nombre %} {% render_bs_field form.descripcion %}
+    <button type="submit" class="btn btn-primary">Guardar</button>
+    <a href="{% url 'fuente_list' %}" class="btn btn-outline-secondary">Cancelar</a>
+  </form>
+</div>
+{% endblock %}

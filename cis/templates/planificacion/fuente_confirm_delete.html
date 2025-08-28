@@ -1,0 +1,15 @@
+{# planificacion/templates/planificacion/fuente_confirm_delete.html #} {% extends "base.html" %} {% block content %}
+<div class="container py-4" style="max-width: 600px">
+  <h1 class="h5 mb-3">Eliminar fuente de información</h1>
+  <div class="alert alert-warning">
+    ¿Seguro que deseas eliminar
+    <strong>{{ object.nombre }}</strong>
+    ?
+  </div>
+  <form method="post">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-danger">Eliminar</button>
+    <a href="{% url 'fuente_list' %}" class="btn btn-outline-secondary">Cancelar</a>
+  </form>
+</div>
+{% endblock %}

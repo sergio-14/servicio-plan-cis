@@ -1,0 +1,14 @@
+{# planificacion/templates/planificacion/_bs_field.html #}
+<div class="mb-3">
+  {% if show_label %}
+  <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+  {% endif %} {{ field }} {% if field.help_text %}
+  <div class="form-text">{{ field.help_text }}</div>
+  {% endif %} {% if field.errors %}
+  <div class="invalid-feedback d-block">
+    {% for e in field.errors %}{{ e }}{% if not forloop.last %}
+    <br />
+    {% endif %}{% endfor %}
+  </div>
+  {% endif %}
+</div>
