@@ -2,7 +2,7 @@
 <div class="container-fluid py-4">
   <div class="d-flex justify-content-between mb-3">
     <h1 class="h3 mb-0">Fuentes de Información</h1>
-    <a href="{% url 'fuente_create' %}" class="btn btn-primary">Nueva</a>
+    <a href="{% url 'fuente_create' %}" class="btn btn-primary">+ Agregar Nueva Fuente</a>
   </div>
   <table class="table table-hover">
     <thead class="table-light">
@@ -18,8 +18,8 @@
         <td>{{ f.nombre }}</td>
         <td>{{ f.descripcion|default:"—" }}</td>
         <td class="text-end">
-          <a href="{% url 'fuente_update' f.pk %}" class="btn btn-sm btn-outline-primary">Editar</a>
-          <a href="{% url 'fuente_delete' f.pk %}" class="btn btn-sm btn-outline-danger">Borrar</a>
+          <a href="{% url 'fuente_update' f.pk %}" class="btn btn-sm btn-primary">Editar</a>
+          <a href="{% url 'fuente_delete' f.pk %}" class="btn btn-sm btn-danger">Borrar</a>
         </td>
       </tr>
       {% empty %}

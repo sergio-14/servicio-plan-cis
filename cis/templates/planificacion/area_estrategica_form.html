@@ -1,5 +1,5 @@
 {# planificacion/templates/planificacion/area_estrategica_form.html #} {% extends "base.html" %} {% load bootstrap_extras %} {% block content %}
-<div class="container py-4" style="max-width: 680px">
+<div class="container-fluid py-4">
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h1 class="h4 mb-0">{% if object %}Editar{% else %}Nueva{% endif %} área estratégica</h1>
     <a href="{% url 'area_estrategica_list' %}" class="btn btn-outline-secondary">Volver</a>

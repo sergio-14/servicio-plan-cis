@@ -6,9 +6,7 @@
 <div class="container-fluid py-4">
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h1 class="h3 mb-0">Acciones estratégicas (productos)</h1>
-    <a href="{% url 'accion_create' %}" class="btn btn-primary">
-      <i class="bi bi-plus-circle"></i> Nueva
-    </a>
+    
   </div>
 
   {% if messages %}
@@ -20,10 +18,7 @@
   {% endif %}
 
   <form method="get" class="row g-2 mb-3">
-    <div class="col-lg-4">
-      <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Buscar (código, descripción, objetivo, área)">
-    </div>
-    <div class="col-lg-4">
+    <div class="col-lg-6">
       <select name="objetivo" class="form-select">
         <option value="">— Objetivo —</option>
         {% for o in objetivos %}
@@ -33,7 +28,7 @@
         {% endfor %}
       </select>
     </div>
-    <div class="col-lg-3">
+    <div class="col-lg-6">
       <select name="area_org" class="form-select">
         <option value="">— Área organizacional —</option>
         {% for a in areas_org %}
@@ -43,8 +38,16 @@
         {% endfor %}
       </select>
     </div>
-    <div class="col-lg-1 d-grid">
-      <button class="btn btn-outline-secondary">Filtrar</button>
+     <div class="col-lg-8">
+      <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Buscar (código, descripción, objetivo, área)">
+    </div>
+    <div class="col-lg-2 d-grid">
+      <button class="btn btn-primary">Filtrar</button>
+    </div>
+    <div class="col-lg-2 d-grid">
+      <a href="{% url 'accion_create' %}" class="btn btn-success">
+        <i class="bi bi-plus-circle"></i> Nueva
+      </a>
     </div>
   </form>
 
@@ -52,8 +55,8 @@
     <table class="table table-hover align-middle">
       <thead class="table-light">
         <tr>
-          <th>Objetivo</th>
-          <th>Código</th>
+          <th style="width: 70px;">Código</th>
+          <th style="width: 450px;">Objetivo</th>      
           <th>Descripción</th>
           <th style="width: 150px;"></th>
         </tr>
@@ -61,17 +64,17 @@
       <tbody>
         {% for ac in acciones %}
           <tr>
+            <td>{{ ac.codigo|default:"—" }}</td>
             <td>
               <div class="fw-semibold">{{ ac.objetivo.codigo|default:"(s/c)" }} — {{ ac.objetivo.descripcion|truncatechars:80 }}</div>
               <div class="small text-muted">
                 {{ ac.objetivo.area_org.nombre }} ({{ ac.objetivo.area_org.entidad.sigla|default:ac.objetivo.area_org.entidad.nombre }})
               </div>
-            </td>
-            <td>{{ ac.codigo|default:"—" }}</td>
+            </td>            
             <td>{{ ac.descripcion }}</td>
             <td class="text-end">
-              <a href="{% url 'accion_update' ac.pk %}" class="btn btn-sm btn-outline-primary">Editar</a>
-              <a href="{% url 'accion_delete' ac.pk %}" class="btn btn-sm btn-outline-danger">Borrar</a>
+              <a href="{% url 'accion_update' ac.pk %}" class="btn btn-sm btn-primary">Editar</a>
+              <a href="{% url 'accion_delete' ac.pk %}" class="btn btn-sm btn-danger">Borrar</a>
             </td>
           </tr>
         {% empty %}

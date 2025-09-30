@@ -1,0 +1,101 @@
+<!-- planificacion/dashboard.html -->
+{% extends "base.html" %} {% block content %}
+<div class="container py-4">
+  <!-- KPIs -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-3">
+      <div class="p-3 bg-white shadow rounded text-center">
+        <div class="text-muted">Indicadores</div>
+        <div class="fs-3 fw-bold">{{ total_indicadores }}</div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="p-3 bg-white shadow rounded text-center">
+        <div class="text-muted">Con ejecución</div>
+        <div class="fs-3 fw-bold">{{ con_ejecucion }}</div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="p-3 bg-white shadow rounded text-center">
+        <div class="text-muted">Sin programación</div>
+        <div class="fs-3 fw-bold">{{ sin_programacion }}</div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="p-3 bg-white shadow rounded text-center">
+        <div class="text-muted">% Avance promedio</div>
+        <div class="fs-3 fw-bold">{{ avance_promedio }}%</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-md-6">
+      <div class="p-3 bg-white shadow rounded">
+        <h6 class="mb-3">Programado vs Ejecutado por año</h6>
+        <canvas id="grafAvance"></canvas>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="p-3 bg-white shadow rounded">
+        <h6 class="mb-3">Distribución por tipo</h6>
+        <canvas id="grafTipo"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4 mt-1">
+    <div class="col-12">
+      <div class="p-3 bg-white shadow rounded">
+        <h6 class="mb-1">Cumplimiento por área ({{ ultimo_anio|default:"—" }})</h6>
+        <canvas id="grafArea"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const porAnio = {{ por_anio|safe }};
+  const distTipo = {{ dist_tipo|safe }};
+  const porArea = {{ cumplimiento_area|safe }};
+
+  // --- Barras: Programado vs Ejecutado por año ---
+  new Chart(document.getElementById('grafAvance'), {
+    type: 'bar',
+    data: {
+      labels: porAnio.map(x => x.anio),
+      datasets: [
+        { label: 'Programado', data: porAnio.map(x => x.programado) },
+        { label: 'Ejecutado', data: porAnio.map(x => x.ejecutado) },
+      ]
+    },
+    options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+  });
+
+  // --- Dona: distribución por tipo ---
+  new Chart(document.getElementById('grafTipo'), {
+    type: 'doughnut',
+    data: {
+      labels: distTipo.map(x => x.tipo),
+      datasets: [{ data: distTipo.map(x => x.total) }]
+    },
+    options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+  });
+
+  // --- Barras horizontales: cumplimiento por área ---
+  new Chart(document.getElementById('grafArea'), {
+    type: 'bar',
+    data: {
+      labels: porArea.map(x => x.area),
+      datasets: [{ label: '% Cumplimiento', data: porArea.map(x => x.prom_cumplimiento) }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: { x: { min: 0, max: 110 } }
+    }
+  });
+</script>
+{% endblock %}

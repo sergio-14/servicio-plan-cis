@@ -4,116 +4,209 @@
 
 {% block content %}
 <div class="container-fluid py-4">
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h1 class="h3 mb-0">Indicadores</h1>
-    <a href="{% url 'indicador_create' %}" class="btn btn-primary">
-      <i class="bi bi-plus-circle"></i> Nuevo indicador
-    </a>
+  
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1 class="h3 mb-1">Indicadores</h1>
+      <p class="text-muted mb-0">Gestión y seguimiento de indicadores</p>
+    </div>
+    
   </div>
 
+  <!-- Mensajes -->
   {% if messages %}
     <div class="mb-3">
       {% for message in messages %}
-        <div class="alert alert-{{ message.tags|default:'info' }} mb-2" role="alert">{{ message }}</div>
+        <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show mb-2" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
       {% endfor %}
     </div>
   {% endif %}
 
-  <form method="get" class="row g-2 mb-3">
-    <div class="col-lg-4">
-      <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Buscar (nombre, código, operación)">
+  <!-- Filtros -->
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+      <form method="get" class="row g-3">
+        <div class="col-12 col-md-4 ">
+          <label class="form-label small text-muted mb-1">Operación</label>
+          <select name="op" class="form-select">
+            <option value="">Todas las operaciones</option>
+            {% for o in operaciones %}
+              <option value="{{ o.id }}" {% if op_selected|default:'' == o.id|stringformat:'s' %}selected{% endif %}>
+                {{ o.codigo|default:'-' }} — {{ o.descripcion|truncatechars:50 }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-6 col-md-4 ">
+          <label class="form-label small text-muted mb-1">Tipo</label>
+          <select name="tipo" class="form-select">
+            <option value="">Todos</option>
+            {% for val,label in tipos %}
+              <option value="{{ val }}" {% if tipo_selected == val %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-6 col-md-4 ">
+          <label class="form-label small text-muted mb-1">Unidad</label>
+          <select name="unidad" class="form-select">
+            <option value="">Todas</option>
+            {% for val,label in unidades %}
+              <option value="{{ val }}" {% if unidad_selected == val %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-12 col-md-7 ">
+          <label class="form-label small text-muted mb-1">Búsqueda</label>
+          <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Nombre, código, operación...">
+        </div>
+        <div class="col-12 col-md-2 d-flex align-items-end">
+          <button class="btn btn-primary w-100">
+            <i class="bi bi-funnel me-1"></i> Filtrar
+          </button>
+        </div>
+        <div class="col-12 col-md-3 d-flex align-items-end">
+          <a href="{% url 'indicador_create' %}" class="btn btn-success">
+            <i class="bi bi-plus-circle me-1"></i> Nuevo indicador
+          </a>
+        </div>
+      </form>
     </div>
-    <div class="col-lg-3">
-      <select name="op" class="form-select">
-        <option value="">— Operación —</option>
-        {% for o in operaciones %}
-          <option value="{{ o.id }}" {% if op_selected|default:'' == o.id|stringformat:'s' %}selected{% endif %}>
-            {{ o.codigo|default:'-' }} — {{ o.descripcion|truncatechars:60 }}
-          </option>
-        {% endfor %}
-      </select>
-    </div>
-    <div class="col-lg-2">
-      <select name="tipo" class="form-select">
-        <option value="">— Tipo —</option>
-        {% for val,label in tipos %}
-          <option value="{{ val }}" {% if tipo_selected == val %}selected{% endif %}>{{ label }}</option>
-        {% endfor %}
-      </select>
-    </div>
-    <div class="col-lg-2">
-      <select name="unidad" class="form-select">
-        <option value="">— Unidad —</option>
-        {% for val,label in unidades %}
-          <option value="{{ val }}" {% if unidad_selected == val %}selected{% endif %}>{{ label }}</option>
-        {% endfor %}
-      </select>
-    </div>
-    <div class="col-lg-1 d-grid">
-      <button class="btn btn-outline-secondary">Filtrar</button>
-    </div>
-  </form>
-
-  <div class="table-responsive">
-    <table class="table table-hover align-middle">
-      <thead class="table-light">
-        <tr>
-          <th>Operación</th>
-          <th>Nombre</th>
-          <th>Tipo</th>
-          <th>Unidad</th>
-          <th>LB ({{ indicadores.0.anio_linea_base|default:'—' }})</th>
-          <th>Meta ({{ indicadores.0.anio_meta|default:'—' }})</th>
-          <th style="width: 140px;"></th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for ind in indicadores %}
-          <tr>
-            <td><span class="text-muted">Op. {{ ind.operacion.codigo|default:'-' }}</span></td>
-            <td>{{ ind.nombre }}</td>
-            <td>
-              <span class="badge bg-secondary">{{ ind.get_tipo_display }}</span>
-            </td>
-            <td>
-              <span class="badge bg-info text-dark">{{ ind.get_unidad_display }}</span>
-            </td>
-            <td>{{ ind.linea_base|default:"—" }}</td>
-            <td>{{ ind.meta_valor|default:"—" }}</td>
-            <td class="text-end">
-              <a href="{% url 'indicador_update' ind.pk %}" class="btn btn-sm btn-outline-primary">Editar</a>
-              <a href="{% url 'indicador_delete' ind.pk %}" class="btn btn-sm btn-outline-danger">Borrar</a>
-            </td>
-          </tr>
-        {% empty %}
-          <tr><td colspan="7" class="text-center text-muted">Sin resultados</td></tr>
-        {% endfor %}
-      </tbody>
-    </table>
   </div>
 
+  <!-- Cards de Indicadores -->
+  <div class="row g-3">
+    {% for ind in indicadores %}
+      <div class="col-12 col-lg-6 col-xl-6">
+        <div class="card border-0 shadow-sm h-100 hover-card">
+          <div class="card-body">
+            
+            <!-- Header del Card -->
+            <div class="d-flex justify-content-between align-items-start mb-3">
+              <div class="flex-grow-1">
+                <span class="badge bg-light text-dark border mb-2">
+                  <i class="bi bi-diagram-3 me-1"></i> Op. {{ ind.operacion.codigo|default:'-' }}
+                </span>
+                <h5 class="card-title mb-1 fw-semibold">{{ ind.nombre }}</h5>
+              </div>
+            </div>
+
+            <!-- Badges -->
+            <div class="mb-3">
+              <span class="badge bg-primary bg-opacity-10 text-primary me-2">
+                {{ ind.get_tipo_display }}
+              </span>
+              <span class="badge bg-info bg-opacity-10 text-info">
+                {{ ind.get_unidad_display }}
+              </span>
+            </div>
+
+            <!-- Métricas -->
+            <div class="row g-2 mb-3">
+              <div class="col-6">
+                <div class="p-2 bg-light rounded">
+                  <div class="small text-muted mb-1">
+                    <i class="bi bi-flag me-1"></i> Línea Base ({{ ind.anio_linea_base|default:'—' }})
+                  </div>
+                  <div class="fw-bold">{{ ind.linea_base|default:"—" }}</div>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="p-2 bg-light rounded">
+                  <div class="small text-muted mb-1">
+                    <i class="bi bi-bullseye me-1"></i> Meta ({{ ind.anio_meta|default:'—' }})
+                  </div>
+                  <div class="fw-bold text-primary">{{ ind.meta_valor|default:"—" }}</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Acciones -->
+            <div class="d-flex gap-2">
+              <a href="{% url 'indicador_update' ind.pk %}" class="btn btn-sm btn-primary flex-fill">
+                <i class="bi bi-pencil me-1"></i> Editar
+              </a>
+              <a href="{% url 'indicador_delete' ind.pk %}" class="btn btn-sm btn-danger flex-fill">
+                <i class="bi bi-trash me-1"></i> Borrar
+              </a>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    {% empty %}
+      <div class="col-12">
+        <div class="card border-0 shadow-sm">
+          <div class="card-body text-center py-5">
+            <i class="bi bi-inbox display-1 text-muted mb-3"></i>
+            <h5 class="text-muted">No se encontraron indicadores</h5>
+            <p class="text-muted mb-3">Intenta ajustar los filtros o crea un nuevo indicador</p>
+            <a href="{% url 'indicador_create' %}" class="btn btn-primary">
+              <i class="bi bi-plus-circle me-1"></i> Crear primer indicador
+            </a>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+  <!-- Paginación -->
   {% if is_paginated %}
-    <nav>
-      <ul class="pagination">
+    <nav class="mt-4">
+      <ul class="pagination justify-content-center">
         {% if page_obj.has_previous %}
-          <li class="page-item"><a class="page-link" href="?q={{ q }}&op={{ op_selected }}&tipo={{ tipo_selected }}&unidad={{ unidad_selected }}&page={{ page_obj.previous_page_number }}">Anterior</a></li>
+          <li class="page-item">
+            <a class="page-link" href="?q={{ q }}&op={{ op_selected }}&tipo={{ tipo_selected }}&unidad={{ unidad_selected }}&page={{ page_obj.previous_page_number }}">
+              <i class="bi bi-chevron-left"></i> Anterior
+            </a>
+          </li>
         {% else %}
-          <li class="page-item disabled"><span class="page-link">Anterior</span></li>
+          <li class="page-item disabled">
+            <span class="page-link"><i class="bi bi-chevron-left"></i> Anterior</span>
+          </li>
         {% endif %}
+        
         {% for i in paginator.page_range %}
           {% if page_obj.number == i %}
             <li class="page-item active"><span class="page-link">{{ i }}</span></li>
           {% else %}
-            <li class="page-item"><a class="page-link" href="?q={{ q }}&op={{ op_selected }}&tipo={{ tipo_selected }}&unidad={{ unidad_selected }}&page={{ i }}">{{ i }}</a></li>
+            <li class="page-item">
+              <a class="page-link" href="?q={{ q }}&op={{ op_selected }}&tipo={{ tipo_selected }}&unidad={{ unidad_selected }}&page={{ i }}">{{ i }}</a>
+            </li>
           {% endif %}
         {% endfor %}
+        
         {% if page_obj.has_next %}
-          <li class="page-item"><a class="page-link" href="?q={{ q }}&op={{ op_selected }}&tipo={{ tipo_selected }}&unidad={{ unidad_selected }}&page={{ page_obj.next_page_number }}">Siguiente</a></li>
+          <li class="page-item">
+            <a class="page-link" href="?q={{ q }}&op={{ op_selected }}&tipo={{ tipo_selected }}&unidad={{ unidad_selected }}&page={{ page_obj.next_page_number }}">
+              Siguiente <i class="bi bi-chevron-right"></i>
+            </a>
+          </li>
         {% else %}
-          <li class="page-item disabled"><span class="page-link">Siguiente</span></li>
+          <li class="page-item disabled">
+            <span class="page-link">Siguiente <i class="bi bi-chevron-right"></i></span>
+          </li>
         {% endif %}
       </ul>
     </nav>
   {% endif %}
+
 </div>
+
+<style>
+  .hover-card {
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .hover-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+  }
+  .form-label {
+    font-weight: 500;
+  }
+</style>
+
 {% endblock %}

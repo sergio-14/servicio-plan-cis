@@ -6,6 +6,7 @@ from cis import views
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.dashboard, name='dashboard'),  
+    path("reportes/cumplimiento/", views.ReporteCumplimientoView.as_view(), name="reporte_cumplimiento"),
     
     path("areas/", views.AreaOrganizacionalListView.as_view(), name="area_org_list"),
     path("areas/nuevo/", views.AreaOrganizacionalCreateView.as_view(), name="area_org_create"),

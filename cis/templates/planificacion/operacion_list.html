@@ -6,7 +6,7 @@
 <div class="container-fluid py-4">
   <div class="d-flex justify-content-between mb-3">
     <h1 class="h3 mb-0">Operaciones</h1>
-    <a href="{% url 'operacion_create' %}" class="btn btn-primary">Nueva</a>
+    
   </div>
 
   <form method="get" class="row g-2 mb-3">
@@ -24,28 +24,32 @@
       </select>
     </div>
     <div class="col-md-2 d-grid">
-      <button class="btn btn-outline-secondary">Filtrar</button>
+      <button class="btn btn-primary">Filtrar</button>
+    </div>
+    <div class="col-md-2 d-grid">
+      <a href="{% url 'operacion_create' %}" class="btn btn-success">Nueva</a>
     </div>
   </form>
 
   <table class="table table-hover align-middle">
     <thead class="table-light">
       <tr>
+        <th style="width: 70px;">Código</th>
         <th>Acción</th>
-        <th>Código</th>
-        <th>Descripción</th>
+        <th style="width: 400px;">Descripción</th>
         <th style="width: 150px;"></th>
       </tr>
     </thead>
     <tbody>
       {% for op in operaciones %}
-        <tr>
-          <td>{{ op.accion.codigo|default:"(s/c)" }} — {{ op.accion.descripcion|truncatechars:60 }}</td>
+        <tr> 
           <td>{{ op.codigo|default:"—" }}</td>
+          <td>{{ op.accion.codigo|default:"(s/c)" }} — {{ op.accion.descripcion|truncatechars:60 }}</td>
+         
           <td>{{ op.descripcion }}</td>
           <td class="text-end">
-            <a href="{% url 'operacion_update' op.pk %}" class="btn btn-sm btn-outline-primary">Editar</a>
-            <a href="{% url 'operacion_delete' op.pk %}" class="btn btn-sm btn-outline-danger">Borrar</a>
+            <a href="{% url 'operacion_update' op.pk %}" class="btn btn-sm btn-primary">Editar</a>
+            <a href="{% url 'operacion_delete' op.pk %}" class="btn btn-sm btn-danger">Borrar</a>
           </td>
         </tr>
       {% empty %}

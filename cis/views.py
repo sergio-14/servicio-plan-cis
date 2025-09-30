@@ -1,8 +1,178 @@
 from django.shortcuts import render
 
-# Create your views here.
+from django.db.models import Avg, Count, F, Q, Sum, Case, When, Value
+from django.db.models.functions import Coalesce
+from django.db.models import FloatField
+from .models import Indicador, SerieIndicador, AreaOrganizacional
+
+
+
 def dashboard(request):
-    return render(request, 'base.html')
+    indicadores = (Indicador.objects
+                   .select_related("operacion", "operacion__accion",
+                                   "operacion__accion__objetivo",
+                                   "operacion__accion__objetivo__area_org"))
+    series = SerieIndicador.objects.all()
+
+    total_indicadores = indicadores.count()
+    con_ejecucion = indicadores.filter(series__es_programado=False, series__valor__isnull=False).distinct().count()
+    sin_programacion = indicadores.exclude(series__es_programado=True).distinct().count()
+
+    # --- Programado vs Ejecutado por año (todo a FloatField) ---
+    por_anio = (
+        series.values("anio")
+        .annotate(
+            programado=Coalesce(
+                Sum(Case(When(es_programado=True, then=F("valor")), default=Value(0), output_field=FloatField())),
+                Value(0.0), output_field=FloatField()
+            ),
+            ejecutado=Coalesce(
+                Sum(Case(When(es_programado=False, then=F("valor")), default=Value(0), output_field=FloatField())),
+                Value(0.0), output_field=FloatField()
+            ),
+        )
+        .order_by("anio")
+    )
+
+    # --- Distribución por tipo ---
+    dist_tipo = (indicadores.values("tipo")
+                 .annotate(total=Count("id"))
+                 .order_by("tipo"))
+
+    # --- Cumplimiento por indicador y año (todo a FloatField) ---
+    ind_anio = (
+        series.values("indicador_id", "anio")
+        .annotate(
+            programado=Coalesce(
+                Sum(Case(When(es_programado=True, then=F("valor")), default=Value(0), output_field=FloatField())),
+                Value(0.0), output_field=FloatField()
+            ),
+            ejecutado=Coalesce(
+                Sum(Case(When(es_programado=False, then=F("valor")), default=Value(0), output_field=FloatField())),
+                Value(0.0), output_field=FloatField()
+            ),
+        )
+        .annotate(
+            cumplimiento=Case(
+                When(programado__gt=0, then=(Value(100.0, output_field=FloatField()) * F("ejecutado") / F("programado"))),
+                default=Value(0.0),
+                output_field=FloatField(),
+            )
+        )
+    )
+
+    # --- Avance promedio global ---
+    tot_prog = sum(x["programado"] for x in ind_anio)
+    tot_ejec = sum(x["ejecutado"] for x in ind_anio)
+    avance_promedio = round((tot_ejec / tot_prog) * 100, 2) if tot_prog > 0 else 0.0
+
+    # --- Cumplimiento por área (último año) ---
+    ultimo = series.order_by("-anio").values_list("anio", flat=True).first()
+    cumplimiento_area = []
+    if ultimo:
+        ind_ultimo = { (r["indicador_id"], r["anio"]): r for r in ind_anio.filter(anio=ultimo) }
+
+        areas = (AreaOrganizacional.objects
+                 .select_related("entidad")
+                 .annotate(total_ind=Count("objetivos__acciones__operaciones__indicadores", distinct=True))
+                 .order_by("entidad__sigla", "nombre"))
+
+        for area in areas:
+            ids_ind_area = (Indicador.objects
+                            .filter(operacion__accion__objetivo__area_org=area)
+                            .values_list("id", flat=True))
+            valores = []
+            for ind_id in ids_ind_area:
+                row = ind_ultimo.get((ind_id, ultimo))
+                if row and row["programado"] > 0:
+                    valores.append(row["cumplimiento"])
+            prom = round(sum(valores)/len(valores), 2) if valores else 0.0
+            cumplimiento_area.append({
+                "area_id": area.id,
+                "area": f"{area.nombre} ({area.entidad.sigla or area.entidad.nombre})",
+                "prom_cumplimiento": prom,
+                "total_indicadores": area.total_ind,
+            })
+
+    context = dict(
+        total_indicadores=total_indicadores,
+        con_ejecucion=con_ejecucion,
+        sin_programacion=sin_programacion,
+        avance_promedio=avance_promedio,
+        por_anio=list(por_anio),
+        dist_tipo=list(dist_tipo),
+        cumplimiento_area=cumplimiento_area,
+        ultimo_anio=ultimo,
+    )
+    return render(request, "dashboard.html", context)
+    
+
+from django.views.generic import TemplateView
+
+class ReporteCumplimientoView(TemplateView):
+    template_name = "planificacion/reporte_cumplimiento.html"
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        anio = self.request.GET.get("anio")
+        # Si viene vacío o no es número, lo ignoramos
+        try:
+            anio_int = int(anio) if anio else None
+        except ValueError:
+            anio_int = None
+
+        qs = (
+            SerieIndicador.objects
+            .values(
+                "indicador_id",
+                "indicador__nombre",
+                "anio",
+                "indicador__operacion__codigo",
+                "indicador__operacion__accion__objetivo__area_org__nombre",
+            )
+            .annotate(
+                programado=Coalesce(
+                    Sum(
+                        Case(
+                            When(es_programado=True, then=F("valor")),
+                            default=Value(0),
+                            output_field=FloatField(),   # <- fuerza float
+                        )
+                    ),
+                    Value(0.0),
+                    output_field=FloatField(),       # <- fuerza float
+                ),
+                ejecutado=Coalesce(
+                    Sum(
+                        Case(
+                            When(es_programado=False, then=F("valor")),
+                            default=Value(0),
+                            output_field=FloatField(),   # <- fuerza float
+                        )
+                    ),
+                    Value(0.0),
+                    output_field=FloatField(),       # <- fuerza float
+                ),
+            )
+            .annotate(
+                cumplimiento=Case(
+                    When(
+                        programado__gt=0,
+                        then=Value(100.0, output_field=FloatField()) * F("ejecutado") / F("programado"),
+                    ),
+                    default=Value(0.0),
+                    output_field=FloatField(),       # <- fuerza float
+                )
+            )
+            .order_by("anio", "indicador__operacion__codigo", "indicador__nombre")
+        )
+
+        if anio_int:
+            qs = qs.filter(anio=anio_int)
+
+        ctx["rows"] = list(qs)
+        ctx["anio_selected"] = anio_int or ""
+        return ctx
 
 # planificacion/views_area_org.py
 from django.contrib import messages

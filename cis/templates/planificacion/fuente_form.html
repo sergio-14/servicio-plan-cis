@@ -1,5 +1,5 @@
 {# planificacion/templates/planificacion/fuente_form.html #} {% extends "base.html" %} {% load bootstrap_extras %} {% block content %}
-<div class="container py-4" style="max-width: 650px">
+<div class="container-fluid py-4">
   <h1 class="h4 mb-3">{% if object %}Editar{% else %}Nueva{% endif %} Fuente</h1>
   <form method="post">
     {% csrf_token %} {% render_bs_field form.nombre %} {% render_bs_field form.descripcion %}
